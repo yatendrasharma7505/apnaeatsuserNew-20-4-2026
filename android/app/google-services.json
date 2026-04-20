@@ -1,0 +1,338 @@
+{
+  "project_info": {
+    "project_number": "1026696809660",
+    "project_id": "apnaeats-41654",
+    "storage_bucket": "apnaeats-41654.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1026696809660:android:32244a730143ea294554b9",
+        "android_client_info": {
+          "package_name": "com.apnaeats.apnaeatsRestaurant"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1026696809660-cr07thnn3913vn4f1mkknsli981k8pv1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.apnaeatsRestaurant",
+            "certificate_hash": "1ba78e872bfed4350f51d6b164b59d2f48ad0ba0"
+          }
+        },
+        {
+          "client_id": "1026696809660-enc8nlkocvjajjkh6ru2ab4qe8nmhm58.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.apnaeatsRestaurant",
+            "certificate_hash": "c8f6e079e894686051418660d6c380c34917d1f0"
+          }
+        },
+        {
+          "client_id": "1026696809660-j30a0m5to1sl99fror5c9ao5r2uhl64a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.apnaeatsRestaurant",
+            "certificate_hash": "d6d0235072bdf944057733143e1e55b793bbb271"
+          }
+        },
+        {
+          "client_id": "1026696809660-tamcebsna0acc917a7hr79pgqmja9m0a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.apnaeatsRestaurant",
+            "certificate_hash": "81bbd71e1b9bb051000b6f1c653de71da379dcd4"
+          }
+        },
+        {
+          "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4WARPuIEXEA4We5QT-eW4JX2OPlIyzK0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1026696809660-7edr25out5e1h0rhu155r7uhd33uc9qe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.apnaeats.FoodRestaurant"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1026696809660:android:c2d1487f0a3f87264554b9",
+        "android_client_info": {
+          "package_name": "com.apnaeats.food_delivery"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1026696809660-5sr4g6uqf2lhtvks4l14kfgkmdsq2f5t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.food_delivery",
+            "certificate_hash": "c8f6e079e894686051418660d6c380c34917d1f0"
+          }
+        },
+        {
+          "client_id": "1026696809660-6v3sqmvvaaliisn65tsliafoqvncg3i0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.food_delivery",
+            "certificate_hash": "d6d0235072bdf944057733143e1e55b793bbb271"
+          }
+        },
+        {
+          "client_id": "1026696809660-jrsjh96lrggcmo1i5asmkvgf94s6fpd0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.food_delivery",
+            "certificate_hash": "71bc1e00b62ecf0f5d27430ad12e97ee0e453f4f"
+          }
+        },
+        {
+          "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4WARPuIEXEA4We5QT-eW4JX2OPlIyzK0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1026696809660-7edr25out5e1h0rhu155r7uhd33uc9qe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.apnaeats.FoodRestaurant"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1026696809660:android:37f88912d49138564554b9",
+        "android_client_info": {
+          "package_name": "com.apnaeats.fooduser"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1026696809660-1trnobks171a31u5kmhrh8dienm47alj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.fooduser",
+            "certificate_hash": "d6d0235072bdf944057733143e1e55b793bbb271"
+          }
+        },
+        {
+          "client_id": "1026696809660-i5iqmusqo5l43rf3gm9okrg227i8ofo8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.fooduser",
+            "certificate_hash": "7231e6e8b5b7cf924a46c0531a9fcfcb3c894d01"
+          }
+        },
+        {
+          "client_id": "1026696809660-ir41rid2n10qj3poui2um0lte7b41jfm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.fooduser",
+            "certificate_hash": "a28c3e1a1eff7f1e3f602c89d2d07047cdc7b046"
+          }
+        },
+        {
+          "client_id": "1026696809660-kvr6nn9hpa3nttsq7ubp2uron6f1oufd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.fooduser",
+            "certificate_hash": "ff0834cce26bdf4473d47e55ae48da49c570a184"
+          }
+        },
+        {
+          "client_id": "1026696809660-scvug3g53ittbm1tr03ar01urvlopaa5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apnaeats.fooduser",
+            "certificate_hash": "c8f6e079e894686051418660d6c380c34917d1f0"
+          }
+        },
+        {
+          "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4WARPuIEXEA4We5QT-eW4JX2OPlIyzK0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1026696809660-7edr25out5e1h0rhu155r7uhd33uc9qe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.apnaeats.FoodRestaurant"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1026696809660:android:e732bbc1ec41d8cc4554b9",
+        "android_client_info": {
+          "package_name": "com.apnaeats.stackfood_multivendor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4WARPuIEXEA4We5QT-eW4JX2OPlIyzK0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1026696809660-7edr25out5e1h0rhu155r7uhd33uc9qe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.apnaeats.FoodRestaurant"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1026696809660:android:818f9af1f17edd1a4554b9",
+        "android_client_info": {
+          "package_name": "com.resturant.apnaeats"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4WARPuIEXEA4We5QT-eW4JX2OPlIyzK0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1026696809660-7edr25out5e1h0rhu155r7uhd33uc9qe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.apnaeats.FoodRestaurant"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1026696809660:android:80e0ea6b368128d64554b9",
+        "android_client_info": {
+          "package_name": "com.resturant.apnaeats_food_vandor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1026696809660-52kci45at46eqjhg73lu2ekea15g4hn9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.resturant.apnaeats_food_vandor",
+            "certificate_hash": "5bc9837fff69d9d2465c04afbc6609650dad847e"
+          }
+        },
+        {
+          "client_id": "1026696809660-tk3giq5b3a63k2qatmupur6ve0h5d7g0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.resturant.apnaeats_food_vandor",
+            "certificate_hash": "d6d0235072bdf944057733143e1e55b793bbb271"
+          }
+        },
+        {
+          "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4WARPuIEXEA4We5QT-eW4JX2OPlIyzK0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1026696809660-ssch7kgtaig22kskhqejbaf16q9veaug.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1026696809660-7edr25out5e1h0rhu155r7uhd33uc9qe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.apnaeats.FoodRestaurant"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
