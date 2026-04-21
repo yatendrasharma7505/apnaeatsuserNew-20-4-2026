@@ -34,17 +34,27 @@ class CuisineRepository implements CuisineRepositoryInterface {
     CuisineModel? cuisineModel;
     String cacheId = AppConstants.cuisineUri;
 
-    switch(source!){
+    switch (source!) {
       case DataSourceEnum.client:
         Response response = await apiClient.getData(AppConstants.cuisineUri);
-        if(response.statusCode == 200){
+        if (response.statusCode == 200) {
           cuisineModel = CuisineModel.fromJson(response.body);
-          LocalClient.organize(DataSourceEnum.client, cacheId, jsonEncode(response.body), apiClient.getHeader());
+          LocalClient.organize(
+            DataSourceEnum.client,
+            cacheId,
+            jsonEncode(response.body),
+            apiClient.getHeader(),
+          );
         }
 
       case DataSourceEnum.local:
-        String? cacheResponseData = await LocalClient.organize(DataSourceEnum.local, cacheId, null, null);
-        if(cacheResponseData != null) {
+        String? cacheResponseData = await LocalClient.organize(
+          DataSourceEnum.local,
+          cacheId,
+          null,
+          null,
+        );
+        if (cacheResponseData != null) {
           cuisineModel = CuisineModel.fromJson(jsonDecode(cacheResponseData));
         }
     }
@@ -53,18 +63,25 @@ class CuisineRepository implements CuisineRepositoryInterface {
   }
 
   @override
-  Future<CuisineRestaurantModel?> getRestaurantList(int offset, int cuisineId, {String? name, String? query}) async {
+  Future<CuisineRestaurantModel?> getRestaurantList(
+    int offset,
+    int cuisineId, {
+    String? name,
+    String? query,
+  }) async {
     CuisineRestaurantModel? cuisineRestaurantsModel;
     StringBuffer mainUrl = StringBuffer();
-    mainUrl.write('${AppConstants.cuisineRestaurantUri}?cuisine=$cuisineId&offset=$offset&limit=${(name == null || name.isEmpty) ? 10 : 30}');
+    mainUrl.write(
+      '${AppConstants.cuisineRestaurantUri}?cuisine_id=$cuisineId&offset=$offset&limit=${(name == null || name.isEmpty) ? 10 : 30}',
+    );
 
-     if (name != null && name.isNotEmpty) mainUrl.write('&name=$name');
-     if (query != null && query.isNotEmpty) mainUrl.write('&filter_data=$query');
+    if (name != null && name.isNotEmpty) mainUrl.write('&name=$name');
+    if (query != null && query.isNotEmpty) mainUrl.write('&filter_data=$query');
 
-     Response response = await apiClient.getData(mainUrl.toString());
+    Response response = await apiClient.getData(mainUrl.toString());
 
     // Response response = await apiClient.getData('${AppConstants.cuisineRestaurantUri}?cuisine_id=$cuisineId&offset=$offset&limit=10');
-    if(response.statusCode == 200) {
+    if (response.statusCode == 200) {
       cuisineRestaurantsModel = CuisineRestaurantModel.fromJson(response.body);
     }
     return cuisineRestaurantsModel;
@@ -77,17 +94,23 @@ class CuisineRepository implements CuisineRepositoryInterface {
 
   @override
   Future<bool> saveSearchHistory(List<String> searchHistories) async {
-    return await sharedPreferences.setStringList(AppConstants.searchCuisineHistory, searchHistories);
+    return await sharedPreferences.setStringList(
+      AppConstants.searchCuisineHistory,
+      searchHistories,
+    );
   }
 
   @override
   List<String> getSearchHistory() {
-    return sharedPreferences.getStringList(AppConstants.searchCuisineHistory) ?? [];
+    return sharedPreferences.getStringList(AppConstants.searchCuisineHistory) ??
+        [];
   }
 
   @override
   Future<bool> clearSearchHistory() async {
-    return sharedPreferences.setStringList(AppConstants.searchCuisineHistory, []);
+    return sharedPreferences.setStringList(
+      AppConstants.searchCuisineHistory,
+      [],
+    );
   }
-
 }
