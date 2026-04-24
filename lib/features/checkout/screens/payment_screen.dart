@@ -1,12 +1,12 @@
 import 'dart:async';
+import 'package:stackfood_multivendor/api/api_client.dart';
 import 'package:stackfood_multivendor/features/checkout/widgets/payment_failed_dialog.dart';
 import 'package:stackfood_multivendor/features/dashboard/controllers/dashboard_controller.dart';
 import 'package:stackfood_multivendor/features/splash/controllers/splash_controller.dart';
 import 'package:stackfood_multivendor/features/order/domain/models/order_model.dart';
-import 'package:stackfood_multivendor/features/location/domain/models/zone_response_model.dart';
 import 'package:stackfood_multivendor/features/loyalty/controllers/loyalty_controller.dart';
 import 'package:stackfood_multivendor/features/wallet/widgets/fund_payment_dialog_widget.dart';
-import 'package:stackfood_multivendor/helper/address_helper.dart';
+import 'package:stackfood_multivendor/helper/razorpay_service.dart';
 import 'package:stackfood_multivendor/helper/route_helper.dart';
 import 'package:stackfood_multivendor/util/app_constants.dart';
 import 'package:stackfood_multivendor/util/dimensions.dart';
@@ -26,14 +26,23 @@ class PaymentScreen extends StatefulWidget {
   final String contactNumber;
   final int? restaurantId;
   final int? packageId;
-  const PaymentScreen({super.key, required this.orderModel, required this.paymentMethod, this.addFundUrl, this.subscriptionUrl,
-    required this.guestId, required this.contactNumber, this.restaurantId, this.packageId});
+  const PaymentScreen(
+      {super.key,
+      required this.orderModel,
+      required this.paymentMethod,
+      this.addFundUrl,
+      this.subscriptionUrl,
+      required this.guestId,
+      required this.contactNumber,
+      this.restaurantId,
+      this.packageId});
 
   @override
   PaymentScreenState createState() => PaymentScreenState();
 }
 
 class PaymentScreenState extends State<PaymentScreen> {
+  late RazorpayService razorpay;
   late String selectedUrl;
   double value = 0.0;
   final bool _isLoading = true;
@@ -45,73 +54,268 @@ class PaymentScreenState extends State<PaymentScreen> {
   void initState() {
     super.initState();
 
-    if(widget.addFundUrl == '' && widget.addFundUrl!.isEmpty && widget.subscriptionUrl == '' && widget.subscriptionUrl!.isEmpty) {
-      selectedUrl = '${AppConstants.baseUrl}/payment-mobile?customer_id=${widget.orderModel.userId == 0 ? widget.guestId : widget.orderModel.userId}&order_id=${widget.orderModel.id}&payment_method=${widget.paymentMethod}';
-    } else if(widget.subscriptionUrl != '' && widget.subscriptionUrl!.isNotEmpty){
-      selectedUrl = widget.subscriptionUrl!;
-    } else {
-      selectedUrl = widget.addFundUrl!;
-    }
-    _initData();
+    // if(widget.addFundUrl == '' && widget.addFundUrl!.isEmpty && widget.subscriptionUrl == '' && widget.subscriptionUrl!.isEmpty) {
+    //   selectedUrl = '${AppConstants.baseUrl}/payment-mobile?customer_id=${widget.orderModel.userId == 0 ? widget.guestId : widget.orderModel.userId}&order_id=${widget.orderModel.id}&payment_method=${widget.paymentMethod}&upi_intent=true';
+    // } else if(widget.subscriptionUrl != '' && widget.subscriptionUrl!.isNotEmpty){
+    //   selectedUrl = widget.subscriptionUrl!;
+    // } else {
+    //   selectedUrl = widget.addFundUrl!;
+    // }
+    // _initData();
+
+    Future.delayed(Duration(milliseconds: 300), () {
+      _startPayment();
+    });
   }
 
-  void _initData() async {
+  Future<void> _startPayment() async {
+    try {
+      /// STEP 1 call payment-mobile
+      final response = await Get.find<ApiClient>().getData("/payment-mobile?"
+          "customer_id=${widget.orderModel.userId == 0 ? widget.guestId : widget.orderModel.userId}"
+          "&order_id=${widget.orderModel.id}"
+          "&payment_method=razor_pay"
+          "&payment_platform=app");
 
-    if(widget.addFundUrl == null && widget.addFundUrl!.isEmpty){
-      ZoneData zoneData = AddressHelper.getAddressFromSharedPref()!.zoneData!.firstWhere((data) => data.id == widget.orderModel.restaurant!.zoneId);
-      maxCodOrderAmount = zoneData.maxCodOrderAmount;
-    }
+      String html = response.body.toString();
 
-    browser = MyInAppBrowser(orderID: widget.orderModel.id.toString(), orderAmount: widget.orderModel.orderAmount, maxCodOrderAmount: maxCodOrderAmount, addFundUrl: widget.addFundUrl,
-        subscriptionUrl: widget.subscriptionUrl, contactNumber: widget.contactNumber, restaurantId: widget.restaurantId, packageId: widget.packageId, isDeliveryOrder: widget.orderModel.orderType == 'delivery');
+      print("PAYMENT MOBILE HTML:");
+      print(html);
 
-    if(!GetPlatform.isIOS) {
-      await InAppWebViewController.setWebContentsDebuggingEnabled(true);
+      /// STEP 2 extract values from html
 
-      bool swAvailable = await WebViewFeature.isFeatureSupported(WebViewFeature.SERVICE_WORKER_BASIC_USAGE);
-      bool swInterceptAvailable = await WebViewFeature.isFeatureSupported(WebViewFeature.SERVICE_WORKER_SHOULD_INTERCEPT_REQUEST);
+      /// payment_request_id
+      RegExp idRegExp = RegExp(r'payment_request_id:\s*"([^"]+)"');
 
-      if (swAvailable && swInterceptAvailable) {
-        ServiceWorkerController serviceWorkerController = ServiceWorkerController.instance();
-        await serviceWorkerController.setServiceWorkerClient(ServiceWorkerClient(
-          shouldInterceptRequest: (request) async {
-            if (kDebugMode) {
-              print(request);
-            }
-            return null;
-          },
-        ));
+      /// email
+      RegExp emailRegExp = RegExp(r'"email":\s*"([^"]+)"');
+
+      /// phone
+      RegExp phoneRegExp = RegExp(r'"contact":\s*"([^"]+)"');
+
+      String paymentRequestId = idRegExp.firstMatch(html)?.group(1) ?? "";
+
+      String email =
+          emailRegExp.firstMatch(html)?.group(1) ?? "customer@apnaeats.com";
+
+      String phone =
+          phoneRegExp.firstMatch(html)?.group(1) ?? widget.contactNumber;
+
+      if (paymentRequestId.isEmpty) {
+        throw Exception("payment_request_id not found");
       }
-    }
 
-    await browser.openUrlRequest(
-      urlRequest: URLRequest(url: WebUri(selectedUrl)),
-      settings: InAppBrowserClassSettings(
-        webViewSettings: InAppWebViewSettings(useShouldOverrideUrlLoading: true, useOnLoadResource: true),
-        browserSettings: InAppBrowserSettings(hideUrlBar: true, hideToolbarTop: GetPlatform.isAndroid),
+      print("PAYMENT REQUEST ID: $paymentRequestId");
+
+      print("EMAIL: $email");
+
+      print("PHONE: $phone");
+
+      /// STEP 3 create razorpay order
+      var body = {
+        "payment_request_id": paymentRequestId,
+        "payment_amount": widget.orderModel.orderAmount.toString(),
+        "currency_code": "INR",
+        "attribute_id": widget.orderModel.id.toString()
+      };
+
+      final createOrderResponse = await Get.find<ApiClient>().postData(
+        "/payment/razor-pay/create-order",
+        body,
+      );
+
+      print("CREATE ORDER RESPONSE:");
+
+      print(createOrderResponse.body);
+
+      if (createOrderResponse.body["status"] == true) {
+        String razorOrderId = createOrderResponse.body["order_id"];
+
+        _openRazorpay(
+          razorOrderId,
+          paymentRequestId,
+          email,
+          phone,
+        );
+      }
+    } catch (e) {
+      print("PAYMENT ERROR: $e");
+    }
+  }
+
+  void _openRazorpay(
+    String razorOrderId,
+    String paymentRequestId,
+    String email,
+    String phone,
+  ) {
+    print("OPENING RAZORPAY");
+
+    print("ORDER ID: $razorOrderId");
+
+    print("PAYMENT REQUEST ID: $paymentRequestId");
+
+    print("EMAIL: $email");
+
+    print("PHONE: $phone");
+
+    razorpay = RazorpayService(
+      onSuccess: (paymentId, orderId, signature) {
+        _handlePaymentSuccess(
+          paymentId,
+          orderId,
+          signature,
+          paymentRequestId,
+        );
+      },
+      onError: (msg) {
+        print("RAZORPAY ERROR: $msg");
+
+        Get.dialog(
+          PaymentFailedDialog(
+            orderID: widget.orderModel.id.toString(),
+            orderAmount: widget.orderModel.orderAmount,
+            contactPersonNumber: phone,
+            maxCodOrderAmount: null,
+          ),
+        );
+      },
+    );
+
+    razorpay.openCheckout(
+      orderId: razorOrderId,
+      amount: widget.orderModel.orderAmount!.toDouble(),
+      name: "ApnaEats",
+      email: email,
+      phone: phone,
+    );
+  }
+
+  Future<void> _handlePaymentSuccess(
+    String paymentId,
+    String razorOrderId,
+    String signature,
+    String paymentRequestId,
+  ) async {
+    final body = {
+      "payment_request_id": paymentRequestId,
+      "order_id": razorOrderId,
+      "payment_id": paymentId,
+      "signature": signature,
+    };
+
+    print("VERIFY BODY:");
+    print(body);
+
+    final response = await Get.find<ApiClient>().postData(
+      "/payment/razor-pay/verify-payment",
+      body,
+    );
+
+    print("VERIFY RESPONSE:");
+    print(response.body);
+
+    /// IMPORTANT
+    /// backend redirect return karta hai (302)
+    /// isliye JSON check nahi karna
+
+    Get.offNamed(
+      RouteHelper.getOrderSuccessRoute(
+        widget.orderModel.id.toString(),
+        'success',
+        widget.orderModel.orderAmount,
+        widget.contactNumber,
+        isDeliveryOrder: widget.orderModel.orderType == 'delivery',
       ),
     );
   }
 
   @override
+  void dispose() {
+    razorpay.dispose();
+
+    super.dispose();
+  }
+
+  // void _initData() async {
+  //   if (widget.addFundUrl == null && widget.addFundUrl!.isEmpty) {
+  //     ZoneData zoneData = AddressHelper.getAddressFromSharedPref()!
+  //         .zoneData!
+  //         .firstWhere(
+  //             (data) => data.id == widget.orderModel.restaurant!.zoneId);
+  //     maxCodOrderAmount = zoneData.maxCodOrderAmount;
+  //   }
+
+  //   browser = MyInAppBrowser(
+  //       orderID: widget.orderModel.id.toString(),
+  //       orderAmount: widget.orderModel.orderAmount,
+  //       maxCodOrderAmount: maxCodOrderAmount,
+  //       addFundUrl: widget.addFundUrl,
+  //       subscriptionUrl: widget.subscriptionUrl,
+  //       contactNumber: widget.contactNumber,
+  //       restaurantId: widget.restaurantId,
+  //       packageId: widget.packageId,
+  //       isDeliveryOrder: widget.orderModel.orderType == 'delivery');
+
+  //   if (!GetPlatform.isIOS) {
+  //     await InAppWebViewController.setWebContentsDebuggingEnabled(true);
+
+  //     bool swAvailable = await WebViewFeature.isFeatureSupported(
+  //         WebViewFeature.SERVICE_WORKER_BASIC_USAGE);
+  //     bool swInterceptAvailable = await WebViewFeature.isFeatureSupported(
+  //         WebViewFeature.SERVICE_WORKER_SHOULD_INTERCEPT_REQUEST);
+
+  //     if (swAvailable && swInterceptAvailable) {
+  //       ServiceWorkerController serviceWorkerController =
+  //           ServiceWorkerController.instance();
+  //       await serviceWorkerController
+  //           .setServiceWorkerClient(ServiceWorkerClient(
+  //         shouldInterceptRequest: (request) async {
+  //           if (kDebugMode) {
+  //             print(request);
+  //           }
+  //           return null;
+  //         },
+  //       ));
+  //     }
+  //   }
+
+  //   await browser.openUrlRequest(
+  //     urlRequest: URLRequest(url: WebUri(selectedUrl)),
+  //     settings: InAppBrowserClassSettings(
+  //       webViewSettings: InAppWebViewSettings(
+  //           useShouldOverrideUrlLoading: true, useOnLoadResource: true),
+  //       browserSettings: InAppBrowserSettings(
+  //           hideUrlBar: true, hideToolbarTop: GetPlatform.isAndroid),
+  //     ),
+  //   );
+  // }
+
+  @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: Navigator.canPop(context),
-      onPopInvokedWithResult: (didPop, result) async{
+      onPopInvokedWithResult: (didPop, result) async {
         _exitApp().then((value) => value!);
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).primaryColor,
-        appBar: CustomAppBarWidget(title: 'payment'.tr, onBackPressed: () => _exitApp()),
-        endDrawer: const MenuDrawerWidget(), endDrawerEnableOpenDragGesture: false,
+        appBar: CustomAppBarWidget(
+            title: 'payment'.tr, onBackPressed: () => _exitApp()),
+        endDrawer: const MenuDrawerWidget(),
+        endDrawerEnableOpenDragGesture: false,
         body: Center(
           child: SizedBox(
             width: Dimensions.webMaxWidth,
             child: Stack(
               children: [
-                _isLoading ? Center(
-                  child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor)),
-                ) : const SizedBox.shrink(),
+                _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).primaryColor)),
+                      )
+                    : const SizedBox.shrink(),
               ],
             ),
           ),
@@ -122,16 +326,25 @@ class PaymentScreenState extends State<PaymentScreen> {
 
   Future<bool?> _exitApp() async {
     if (kDebugMode) {
-      print('---------- : ${widget.orderModel.orderStatus} / ${widget.orderModel.paymentMethod}/ ${widget.orderModel.id}');
-      print('---check------- : ${widget.addFundUrl == null} && ${widget.addFundUrl!.isEmpty} && ${widget.subscriptionUrl == ''} && ${widget.subscriptionUrl!.isEmpty}');
+      print(
+          '---------- : ${widget.orderModel.orderStatus} / ${widget.orderModel.paymentMethod}/ ${widget.orderModel.id}');
+      print(
+          '---check------- : ${widget.addFundUrl == null} && ${widget.addFundUrl!.isEmpty} && ${widget.subscriptionUrl == ''} && ${widget.subscriptionUrl!.isEmpty}');
     }
-    if((widget.addFundUrl == null || widget.addFundUrl!.isEmpty) && widget.subscriptionUrl == '' && widget.subscriptionUrl!.isEmpty){
-      return Get.dialog(PaymentFailedDialog(orderID: widget.orderModel.id.toString(), orderAmount: widget.orderModel.orderAmount, maxCodOrderAmount: maxCodOrderAmount, contactPersonNumber: widget.contactNumber));
+    if ((widget.addFundUrl == null || widget.addFundUrl!.isEmpty) &&
+        widget.subscriptionUrl == '' &&
+        widget.subscriptionUrl!.isEmpty) {
+      return Get.dialog(PaymentFailedDialog(
+          orderID: widget.orderModel.id.toString(),
+          orderAmount: widget.orderModel.orderAmount,
+          maxCodOrderAmount: maxCodOrderAmount,
+          contactPersonNumber: widget.contactNumber));
     } else {
-      return Get.dialog(FundPaymentDialogWidget(isSubscription: widget.subscriptionUrl != null && widget.subscriptionUrl!.isNotEmpty));
+      return Get.dialog(FundPaymentDialogWidget(
+          isSubscription: widget.subscriptionUrl != null &&
+              widget.subscriptionUrl!.isNotEmpty));
     }
   }
-
 }
 
 class MyInAppBrowser extends InAppBrowser {
@@ -144,8 +357,18 @@ class MyInAppBrowser extends InAppBrowser {
   final int? restaurantId;
   final int? packageId;
   final bool isDeliveryOrder;
-  MyInAppBrowser({required this.orderID, required this.orderAmount, required this.maxCodOrderAmount, this.contactNumber, super.windowId,
-    super.initialUserScripts, this.addFundUrl, this.subscriptionUrl, this.restaurantId, this.packageId, this.isDeliveryOrder = false});
+  MyInAppBrowser(
+      {required this.orderID,
+      required this.orderAmount,
+      required this.maxCodOrderAmount,
+      this.contactNumber,
+      super.windowId,
+      super.initialUserScripts,
+      this.addFundUrl,
+      this.subscriptionUrl,
+      this.restaurantId,
+      this.packageId,
+      this.isDeliveryOrder = false});
 
   bool _canRedirect = true;
 
@@ -193,12 +416,21 @@ class MyInAppBrowser extends InAppBrowser {
 
   @override
   void onExit() {
-    if(_canRedirect) {
+    if (_canRedirect) {
       // Get.dialog(PaymentFailedDialog(orderID: orderID, orderAmount: orderAmount, maxCodOrderAmount: maxCodOrderAmount));
-      if((addFundUrl == null || addFundUrl!.isEmpty) && subscriptionUrl == '' && subscriptionUrl!.isEmpty){
-        Get.dialog(PaymentFailedDialog(orderID: orderID, orderAmount: orderAmount, maxCodOrderAmount: maxCodOrderAmount, contactPersonNumber: contactNumber,));
+      if ((addFundUrl == null || addFundUrl!.isEmpty) &&
+          subscriptionUrl == '' &&
+          subscriptionUrl!.isEmpty) {
+        Get.dialog(PaymentFailedDialog(
+          orderID: orderID,
+          orderAmount: orderAmount,
+          maxCodOrderAmount: maxCodOrderAmount,
+          contactPersonNumber: contactNumber,
+        ));
       } else {
-        Get.dialog(FundPaymentDialogWidget(isSubscription: subscriptionUrl != null && subscriptionUrl!.isNotEmpty));
+        Get.dialog(FundPaymentDialogWidget(
+            isSubscription:
+                subscriptionUrl != null && subscriptionUrl!.isNotEmpty));
       }
     }
     if (kDebugMode) {
@@ -207,7 +439,8 @@ class MyInAppBrowser extends InAppBrowser {
   }
 
   @override
-  Future<NavigationActionPolicy> shouldOverrideUrlLoading(navigationAction) async {
+  Future<NavigationActionPolicy> shouldOverrideUrlLoading(
+      navigationAction) async {
     if (kDebugMode) {
       print("\n\nOverride ${navigationAction.request.url}\n\n");
     }
@@ -217,7 +450,8 @@ class MyInAppBrowser extends InAppBrowser {
   @override
   void onLoadResource(resource) {
     if (kDebugMode) {
-      print("Started at: ${resource.startTime}ms ---> duration: ${resource.duration}ms ${resource.url ?? ''}");
+      print(
+          "Started at: ${resource.startTime}ms ---> duration: ${resource.duration}ms ${resource.url ?? ''}");
     }
   }
 
@@ -232,57 +466,91 @@ class MyInAppBrowser extends InAppBrowser {
     }
   }
 
-  void _redirect(String url, String? contactNumber, int? restaurantId, int? packageId) {
+  void _redirect(
+      String url, String? contactNumber, int? restaurantId, int? packageId) {
+    bool forSubscription = (subscriptionUrl != null &&
+        subscriptionUrl!.isNotEmpty &&
+        addFundUrl == '' &&
+        addFundUrl!.isEmpty);
 
-    bool forSubscription = (subscriptionUrl != null && subscriptionUrl!.isNotEmpty && addFundUrl == '' && addFundUrl!.isEmpty);
-
-    if(_canRedirect) {
-      bool isSuccess = forSubscription ? url.startsWith('${AppConstants.baseUrl}/subscription-success')
+    if (_canRedirect) {
+      bool isSuccess = forSubscription
+          ? url.startsWith('${AppConstants.baseUrl}/subscription-success')
           : url.startsWith('${AppConstants.baseUrl}/payment-success');
-      bool isFailed = forSubscription ? url.startsWith('${AppConstants.baseUrl}/subscription-fail')
+      bool isFailed = forSubscription
+          ? url.startsWith('${AppConstants.baseUrl}/subscription-fail')
           : url.startsWith('${AppConstants.baseUrl}/payment-fail');
-      bool isCancel = forSubscription ? url.startsWith('${AppConstants.baseUrl}/subscription-cancel')
+      bool isCancel = forSubscription
+          ? url.startsWith('${AppConstants.baseUrl}/subscription-cancel')
           : url.startsWith('${AppConstants.baseUrl}/payment-cancel');
       if (isSuccess || isFailed || isCancel) {
         _canRedirect = false;
         close();
       }
 
-      if((addFundUrl == '' && addFundUrl!.isEmpty && subscriptionUrl == '' && subscriptionUrl!.isEmpty)){
+      if ((addFundUrl == '' &&
+          addFundUrl!.isEmpty &&
+          subscriptionUrl == '' &&
+          subscriptionUrl!.isEmpty)) {
         _orderPaymentDoneDecision(isSuccess, isFailed, isCancel);
-      } else{
-        _decideSubscriptionOrWallet(isSuccess, isFailed, isCancel, restaurantId, packageId);
+      } else {
+        _decideSubscriptionOrWallet(
+            isSuccess, isFailed, isCancel, restaurantId, packageId);
       }
     }
   }
 
   void _orderPaymentDoneDecision(bool isSuccess, bool isFailed, bool isCancel) {
     if (isSuccess) {
-      double total = ((orderAmount! / 100) * Get.find<SplashController>().configModel!.loyaltyPointItemPurchasePoint!);
+      double total = ((orderAmount! / 100) *
+          Get.find<SplashController>()
+              .configModel!
+              .loyaltyPointItemPurchasePoint!);
       Get.find<LoyaltyController>().saveEarningPoint(total.toStringAsFixed(0));
-      Get.offNamed(RouteHelper.getOrderSuccessRoute(orderID, 'success', orderAmount, contactNumber, isDeliveryOrder: isDeliveryOrder));
+      Get.offNamed(RouteHelper.getOrderSuccessRoute(
+          orderID, 'success', orderAmount, contactNumber,
+          isDeliveryOrder: isDeliveryOrder));
     } else if (isFailed || isCancel) {
-      Get.offNamed(RouteHelper.getOrderSuccessRoute(orderID, 'fail', orderAmount, contactNumber, isDeliveryOrder: isDeliveryOrder));
+      Get.offNamed(RouteHelper.getOrderSuccessRoute(
+          orderID, 'fail', orderAmount, contactNumber,
+          isDeliveryOrder: isDeliveryOrder));
     }
   }
 
-  void _decideSubscriptionOrWallet(bool isSuccess, bool isFailed, bool isCancel, int? restaurantId, int? packageId) {
-    if(isSuccess || isFailed || isCancel) {
-      if(Get.currentRoute.contains(RouteHelper.payment)) {
+  void _decideSubscriptionOrWallet(bool isSuccess, bool isFailed, bool isCancel,
+      int? restaurantId, int? packageId) {
+    if (isSuccess || isFailed || isCancel) {
+      if (Get.currentRoute.contains(RouteHelper.payment)) {
         Get.back();
       }
-      if(subscriptionUrl != null && subscriptionUrl!.isNotEmpty && addFundUrl == '' && addFundUrl!.isEmpty) {
-        Get.find<DashboardController>().saveRegistrationSuccessfulSharedPref(true);
-        Get.find<DashboardController>().saveIsRestaurantRegistrationSharedPref(true);
+      if (subscriptionUrl != null &&
+          subscriptionUrl!.isNotEmpty &&
+          addFundUrl == '' &&
+          addFundUrl!.isEmpty) {
+        Get.find<DashboardController>()
+            .saveRegistrationSuccessfulSharedPref(true);
+        Get.find<DashboardController>()
+            .saveIsRestaurantRegistrationSharedPref(true);
         Get.offAllNamed(RouteHelper.getSubscriptionSuccessRoute(
-          status: isSuccess ? 'success' : isFailed ? 'fail' : 'cancel',
-          fromSubscription: true, restaurantId: restaurantId, packageId: packageId,
+          status: isSuccess
+              ? 'success'
+              : isFailed
+                  ? 'fail'
+                  : 'cancel',
+          fromSubscription: true,
+          restaurantId: restaurantId,
+          packageId: packageId,
         ));
       } else {
         Get.back();
-        Get.offAllNamed(RouteHelper.getWalletRoute(fundStatus: isSuccess ? 'success' : isFailed ? 'fail' : 'cancel', /*token: UniqueKey().toString()*/));
+        Get.offAllNamed(RouteHelper.getWalletRoute(
+          fundStatus: isSuccess
+              ? 'success'
+              : isFailed
+                  ? 'fail'
+                  : 'cancel', /*token: UniqueKey().toString()*/
+        ));
       }
     }
   }
-
 }

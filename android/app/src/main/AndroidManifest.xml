@@ -18,6 +18,18 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 
     <queries>
+
+<intent>
+
+<action android:name="android.intent.action.VIEW" />
+
+<data android:scheme="upi" />
+
+</intent>
+
+</queries>
+
+    <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" />
@@ -34,6 +46,7 @@
             <action android:name="android.speech.RecognitionService" />
         </intent>
     </queries>
+
 
     <application
         android:label="Apna Eats"
